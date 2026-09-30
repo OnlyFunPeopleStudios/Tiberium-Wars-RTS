@@ -1,7 +1,3 @@
-<div align="center">
-  <img width="1200" height="475" alt="Tiberium Wars Banner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
-
 # Tiberium Wars RTS - Command & Conquer Clone
 
 Web-based real-time strategy game inspired by Command & Conquer: Tiberium Wars. Built with React 19, Vite, and Canvas 2D.

@@ -17,7 +17,7 @@ import { Faction, AIDifficulty, MapType, StructureCategory, StructureType, UnitT
 import { UNIT_DEFS } from './game/gameData';
 import { sound } from './audio/soundEngine';
 import { storage } from './game/storage';
-import { Maximize2, Minimize2, Tv, PanelRight, X } from 'lucide-react';
+import { Maximize2, Minimize2, Tv, PanelRight, X, Smartphone } from 'lucide-react';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -36,6 +36,7 @@ export default function App() {
   const [crtEnabled, setCrtEnabled] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [needsRotate, setNeedsRotate] = useState(false);
 
   // Mouse & Selection tracking
   const mousePosRef = useRef({ x: 0, y: 0, worldX: 0, worldY: 0 });
@@ -45,6 +46,15 @@ export default function App() {
 
   // Keyboard navigation tracking
   const keysDownRef = useRef<Record<string, boolean>>({});
+
+  // Landscape-only on phones: track it so we can nag when the device is upright.
+  useEffect(() => {
+    const mq = window.matchMedia('(orientation: portrait) and (pointer: coarse)');
+    const sync = () => setNeedsRotate(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   // Initialize engine UI listener
   useEffect(() => {
@@ -476,11 +486,24 @@ export default function App() {
     e.preventDefault();
   };
 
+  const isTouchDevice = () => matchMedia('(pointer: coarse)').matches;
+
+  // Fullscreen + landscape lock. Must run inside a user gesture (start-battle click).
+  // ponytail: orientation.lock() only resolves while fullscreen and is unsupported on iOS
+  // Safari entirely — needsRotate covers those cases, so no fallback needed here.
+  const enterImmersive = async () => {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    }
+    // Phones only: locking is meaningless on desktop and can throw.
+    if (isTouchDevice()) await screen.orientation.lock('landscape');
+  };
+
   // Fullscreen toggle
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
+      enterImmersive().catch(() => {});
     } else {
       document.exitFullscreen().catch(() => {});
       setIsFullscreen(false);
@@ -492,6 +515,8 @@ export default function App() {
     setIsMenuOpen(false);
     setIsPaused(false);
     engineRef.current.startNewGame(faction, difficulty, map);
+    // Phones only: this click is the user gesture fullscreen/orientation require.
+    if (isTouchDevice()) enterImmersive().catch(() => {});
   };
 
   // Local Save / Load Handlers
@@ -871,6 +896,19 @@ export default function App() {
         engine={engineRef.current}
         onLoadSavedGame={handleResumeSavedGame}
       />
+
+      {/* Upright phone: the game only plays in landscape */}
+      {needsRotate && (
+        <div className="fixed inset-0 z-[100] bg-neutral-950 flex flex-col items-center justify-center gap-5 px-10 text-center">
+          <Smartphone className="w-14 h-14 text-amber-400 animate-rotate-hint" />
+          <h2 className="text-lg font-scifi font-bold text-neutral-100 tracking-wide">
+            GIRÁ EL CELULAR
+          </h2>
+          <p className="text-xs text-neutral-400 max-w-[15rem] leading-relaxed">
+            Tiberium Wars se juega en horizontal. Rotá el dispositivo para ver el campo de batalla completo.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

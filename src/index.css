@@ -49,6 +49,16 @@
   animation: radar-sweep 4s linear infinite;
 }
 
+/* Phone-is-upright hint */
+@keyframes rotate-hint {
+  0%, 100% { transform: rotate(-90deg); }
+  50% { transform: rotate(0deg); }
+}
+
+.animate-rotate-hint {
+  animation: rotate-hint 2.5s ease-in-out infinite;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

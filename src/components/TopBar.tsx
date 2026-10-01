@@ -67,7 +67,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <header className="h-12 bg-neutral-900/95 border-b border-neutral-800 px-3 sm:px-4 flex items-center justify-between text-neutral-200 z-30 select-none backdrop-blur-sm">
+    <header className="h-12 bg-neutral-900/95 border-b border-neutral-800 px-3 sm:px-4 flex items-center justify-between gap-2 text-neutral-200 z-30 select-none backdrop-blur-sm overflow-x-auto [&>*]:shrink-0">
       {/* Zone 1: Single text element wordmark */}
       <div className="flex items-center gap-3">
         <span className="font-scifi text-base sm:text-lg font-bold tracking-wider text-amber-500 hover:text-amber-400 transition-colors cursor-pointer" onClick={onRestart}>

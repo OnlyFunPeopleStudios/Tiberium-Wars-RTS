@@ -17,7 +17,7 @@ import { Faction, AIDifficulty, MapType, StructureCategory, StructureType, UnitT
 import { UNIT_DEFS } from './game/gameData';
 import { sound } from './audio/soundEngine';
 import { storage } from './game/storage';
-import { Maximize2, Minimize2, Tv } from 'lucide-react';
+import { Maximize2, Minimize2, Tv, PanelRight, X } from 'lucide-react';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -35,6 +35,7 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [crtEnabled, setCrtEnabled] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Mouse & Selection tracking
   const mousePosRef = useRef({ x: 0, y: 0, worldX: 0, worldY: 0 });
@@ -523,6 +524,18 @@ export default function App() {
             </button>
           </div>
 
+          {/* Mobile: toggle build panel (drawer) */}
+          <button
+            onClick={() => {
+              setIsSidebarOpen(o => !o);
+              sound.playClick();
+            }}
+            className="absolute bottom-3 right-3 z-30 md:hidden p-2.5 rounded-lg bg-amber-500 text-neutral-950 shadow-xl"
+            title={isSidebarOpen ? 'Cerrar panel' : 'Abrir panel de construcción'}
+          >
+            {isSidebarOpen ? <X className="w-5 h-5" /> : <PanelRight className="w-5 h-5" />}
+          </button>
+
           {/* Selected Unit Veterancy & Experience HUD */}
           {(() => {
             const selectedUnits = engineRef.current.units.filter(u => u.isPlayer && u.selected);
@@ -711,9 +724,18 @@ export default function App() {
           )}
         </main>
 
+        {/* Mobile drawer backdrop */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-10 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Command & Conquer EVA Sidebar */}
         <Sidebar
           engine={engineRef.current}
+          mobileOpen={isSidebarOpen}
           activeCategory={activeCategory}
           onSelectCategory={setActiveCategory}
           onMinimapClick={(worldX, worldY) => {

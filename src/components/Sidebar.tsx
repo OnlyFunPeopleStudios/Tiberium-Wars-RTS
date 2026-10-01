@@ -7,6 +7,7 @@ import { sound } from '../audio/soundEngine';
 
 interface SidebarProps {
   engine: GameEngine;
+  mobileOpen?: boolean;
   activeCategory: StructureCategory;
   onSelectCategory: (cat: StructureCategory) => void;
   onMinimapClick: (worldX: number, worldY: number) => void;
@@ -18,6 +19,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({
   engine,
+  mobileOpen = false,
   activeCategory,
   onSelectCategory,
   onMinimapClick,
@@ -58,7 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const vehicleList: UnitType[] = ['harvester', 'tank', 'apc', 'aircraft', 'walker'];
 
   return (
-    <aside className={`w-80 h-[calc(100vh-3rem)] bg-neutral-900 border-l ${factionBorder} flex flex-col z-20 text-neutral-200 select-none shadow-2xl`}>
+    <aside className={`${mobileOpen ? 'flex' : 'hidden'} md:flex fixed md:static right-0 top-12 bottom-0 md:h-[calc(100vh-3rem)] w-80 max-w-[85vw] bg-neutral-900 border-l ${factionBorder} flex-col z-20 text-neutral-200 select-none shadow-2xl`}>
       {/* 1. EVA Tactical Radar Minimap */}
       <div className="relative p-2.5 bg-neutral-950 border-b border-neutral-800 flex flex-col items-center">
         <div className="flex items-center justify-between w-full mb-1 text-[11px] font-mono-numbers text-neutral-400">

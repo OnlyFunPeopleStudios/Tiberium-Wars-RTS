@@ -139,31 +139,27 @@ The game runs entirely client-side - no servers or databases required!
 ```json
 {
   "dependencies": {
-    "@google/genai": "^2.4.0",     # Gemini AI SDK (for EVA voice)
     "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.1",
     "lucide-react": "^0.546.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "vite": "^8.3.0",
-    "express": "^4.21.2",
-    "dotenv": "^17.2.3",
-    "motion": "^12.23.24"
+    "vite": "^8.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.0",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.21.0",
-    "typescript": "^7.0.2",
-    "@types/express": "^4.17.21"
+    "typescript": "^7.0.2"
   }
 }
 ```
 
-> **Note**: `@google/genai` is used only for the EVA voice synthesizer procedural voice lines. The game runs fully without it - voice features gracefully degrade.
+> **Note**: EVA voice lines use the browser's built-in `window.speechSynthesis` (Web Speech API). No AI SDK, API key or network call is involved — voice is fully client-side and degrades silently on browsers without a speech engine.
+>
+> `esbuild` is pinned explicitly because Vite 8 declares it as a peer dependency; a mismatched version makes `npm ci` fail with `ERESOLVE`.
 
 ## 🎨 Customization
 
@@ -173,7 +169,7 @@ Edit these files to customize the game's appearance:
 
 - `src/components/EmbedModal.tsx` - Embed modal text and iframe snippet
 - `src/App.tsx` - App title and credits
-- `metadata.json` - App metadata
+- `index.html` - Page title, meta description and Open Graph tags
 
 ### Game Balance
 

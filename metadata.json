@@ -1,7 +1,0 @@
-{
-  "name": "Tiberium Wars RTS - Command & Conquer Clone",
-  "description": "Juego de estrategia en tiempo real (RTS) estilo Command & Conquer: Tiberium Wars para navegador. Con facciones GDI y Nod, recolección de Tiberio, construcción de bases, combate táctico, superarmas e integración gratuita para OnlyFunPeople Studios.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
-

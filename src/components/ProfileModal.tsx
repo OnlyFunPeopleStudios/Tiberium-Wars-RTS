@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   User, Trophy, Award, Flame, Shield, Gem, Target, Zap, Crown, 
   Download, Upload, AlertTriangle, Trash2, Edit3, Plus, Check, 
@@ -12,7 +12,7 @@ interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   engine: GameEngine;
-  onLoadSavedGame?: () => void;
+  onLoadSavedGame: () => boolean;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
@@ -31,6 +31,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Lazy useState initializers above ran once at app boot, so without this the
+  // modal shows pre-match stats while the TopBar (which re-reads) shows current.
+  // Must sit above the early return below or hook order changes between renders.
+  useEffect(() => {
+    if (!isOpen) return;
+    setProfiles(storage.getProfiles());
+    setActiveProfile(storage.getActiveProfile());
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -57,11 +66,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       setFeedbackMsg({ type: 'error', text: 'No hay ninguna partida guardada disponible.' });
       return;
     }
-    const success = engine.loadSaveState(saved);
+    const success = onLoadSavedGame();
     if (success) {
       sound.playClick();
       onClose();
-      if (onLoadSavedGame) onLoadSavedGame();
     } else {
       setFeedbackMsg({ type: 'error', text: 'Error al reanudar la partida guardada.' });
     }

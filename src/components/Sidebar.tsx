@@ -30,7 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const minimapCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Minimap click & drag to move camera
+  // Minimap click centres the camera on that sector (no drag handling).
   const handleMinimapMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = minimapCanvasRef.current;
     if (!canvas) return;
@@ -462,10 +462,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ? 'border-amber-500 text-amber-400 bg-neutral-900/60'
               : 'border-transparent hover:text-neutral-200'
           }`}
-          title="Edificios principales [Q]"
+          title="Edificios principales"
         >
           <span>Edificios</span>
-          <span className="text-[9px] text-neutral-500">[Q]</span>
         </button>
 
         <button
@@ -475,10 +474,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ? 'border-amber-500 text-amber-400 bg-neutral-900/60'
               : 'border-transparent hover:text-neutral-200'
           }`}
-          title="Torretas y Defensas [W]"
+          title="Torretas y Defensas"
         >
           <span>Defensas</span>
-          <span className="text-[9px] text-neutral-500">[W]</span>
         </button>
 
         <button
@@ -488,10 +486,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ? 'border-amber-500 text-amber-400 bg-neutral-900/60'
               : 'border-transparent hover:text-neutral-200'
           }`}
-          title="Infantería de combate [E]"
+          title="Infantería de combate"
         >
           <span>Infantería</span>
-          <span className="text-[9px] text-neutral-500">[E]</span>
         </button>
 
         <button
@@ -501,11 +498,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ? 'border-amber-500 text-amber-400 bg-neutral-900/60'
               : 'border-transparent hover:text-neutral-200'
           }`}
-          title="Blindados y Aéreo [R]"
+          title="Blindados y Aéreo"
         >
           <span>Vehículos</span>
-          <span className="text-[9px] text-neutral-500">[R]</span>
         </button>
+
+        {/* Tabs cycle with [ / ] — no per-tab key, W would collide with camera-north */}
+        <span className="text-[9px] text-neutral-600 self-center px-1.5 whitespace-nowrap">[ / ]</span>
       </div>
 
       {/* 4. Active Category Production Queue Pipeline Strip */}

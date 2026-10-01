@@ -77,7 +77,7 @@ export const ControlsModal: React.FC<ControlsModalProps> = ({ isOpen, onClose })
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2 bg-neutral-950 rounded border border-neutral-800 flex justify-between items-center">
                 <span className="text-neutral-300">Pestañas de la barra lateral</span>
-                <span className="font-mono bg-neutral-800 px-1.5 py-0.5 rounded text-amber-400">Q / W / E / R</span>
+                <span className="font-mono bg-neutral-800 px-1.5 py-0.5 rounded text-amber-400">[ / ]</span>
               </div>
               <div className="p-2 bg-neutral-950 rounded border border-neutral-800 flex justify-between items-center">
                 <span className="text-neutral-300">Pausar / Reanudar partida</span>

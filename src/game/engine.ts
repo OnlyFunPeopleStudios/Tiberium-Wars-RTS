@@ -152,6 +152,10 @@ export class GameEngine {
     this.vehicleQueue = [];
     this.placementStructure = null;
     this.superweaponTargeting = false;
+    // Stale refs from the previous match would brick clicks (relocation mode eats
+    // every left click and never self-heals once the structure no longer exists).
+    this.relocatingStructure = null;
+    this.selectedStructureId = null;
     this.playerSuperweaponReady = false;
     this.playerSuperweaponTimer = this.playerSuperweaponCooldown;
     this.controlGroups = {};
@@ -2083,10 +2087,10 @@ export class GameEngine {
       }
 
       const path = struct.relocatePath;
+      // relocatePathIndex round-trips through localStorage, so clamp both ends
+      // rather than only the top: a negative index yields undefined and blows up below.
       let pathIdx = struct.relocatePathIndex ?? 0;
-      if (pathIdx >= path.length) {
-        pathIdx = path.length - 1;
-      }
+      pathIdx = Math.max(0, Math.min(pathIdx, path.length - 1));
 
       const targetWp = path[pathIdx];
       const dx = targetWp.x - struct.x;
@@ -2353,19 +2357,21 @@ export class GameEngine {
           }
         }
 
+        // Re-evaluate isLastWP after any lookahead jump so we never index past the end.
+        const isLastWPAfter = unit.pathIndex >= unit.path.length - 1;
         const wpDist = Math.hypot(currentWP.x - unit.x, currentWP.y - unit.y);
-        const wpThreshold = isLastWP ? 8 : 22;
+        const wpThreshold = isLastWPAfter ? 8 : 22;
 
         if (wpDist < wpThreshold) {
-          if (!isLastWP) {
-            unit.pathIndex++;
-            currentWP = unit.path[unit.pathIndex];
-          } else {
+          if (isLastWPAfter) {
             unit.isMoving = false;
             unit.currentSpeed = 0;
             unit.path = undefined;
             return;
           }
+          // Safe by definition: isLastWPAfter false means pathIndex < path.length - 1.
+          unit.pathIndex++;
+          currentWP = unit.path[unit.pathIndex];
         }
 
         steerX = currentWP.x;
@@ -4666,6 +4672,10 @@ export class GameEngine {
 
       this.placementStructure = null;
       this.superweaponTargeting = false;
+      // A save captured mid-relocation carries a stale flag that can never resolve.
+      this.relocatingStructure = null;
+      this.pathVisualizations = [];
+      this.floatingTexts = [];
       this.playerSuperweaponReady = save.playerSuperweaponReady;
       this.playerSuperweaponTimer = save.playerSuperweaponTimer;
       this.cameraX = save.cameraX || 0;

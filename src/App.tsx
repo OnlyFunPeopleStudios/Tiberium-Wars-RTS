@@ -19,9 +19,14 @@ import { sound } from './audio/soundEngine';
 import { storage } from './game/storage';
 import { Maximize2, Minimize2, Tv, PanelRight, X, Smartphone } from 'lucide-react';
 
+const CATEGORIES: StructureCategory[] = ['structures', 'defenses', 'infantry', 'vehicles'];
+
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const engineRef = useRef<GameEngine>(new GameEngine());
+  // Lazy init: `useRef(new GameEngine())` would build a whole engine on every render
+// (pathfinder typed arrays + fog grid + weather particles) and throw it away.
+const engineRef = useRef<GameEngine>(null!);
+if (!engineRef.current) engineRef.current = new GameEngine();
   const rendererRef = useRef<CanvasRenderer | null>(null);
 
   // UI States
@@ -46,6 +51,16 @@ export default function App() {
 
   // Keyboard navigation tracking
   const keysDownRef = useRef<Record<string, boolean>>({});
+  // Read by the rAF loop, which must not re-subscribe on every pause toggle.
+  const isPausedRef = useRef(isPaused);
+  useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
+
+  // Esc exits fullscreen on its own, so sync the button icon to reality.
+  useEffect(() => {
+    const sync = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
 
   // Landscape-only on phones: track it so we can nag when the device is upright.
   useEffect(() => {
@@ -75,6 +90,8 @@ export default function App() {
 
     let animationFrameId: number;
     let lastTime = performance.now();
+    // Queried fresh each frame would mean a DOM query 60x/sec; the node is stable.
+    const minimapCanvas = document.querySelector('aside canvas') as HTMLCanvasElement | null;
 
     const gameLoop = (currentTime: number) => {
       const dt = Math.min((currentTime - lastTime) / 1000, 0.1); // clamp dt
@@ -98,9 +115,13 @@ export default function App() {
       }
 
       // Update simulation if playing
-      if (!isPaused && engine.gameState === 'PLAYING') {
+      if (!isPausedRef.current && engine.gameState === 'PLAYING') {
         engine.update(dt);
       }
+
+      // Repaint React UI. Without this the clock, weather timer and build-progress
+      // bars only refresh on discrete engine events, so they visibly stall.
+      engine.notifyUI();
 
       // Render world
       const mouseW = mousePosRef.current.worldX;
@@ -108,7 +129,6 @@ export default function App() {
       renderer.render(canvas.width, canvas.height, dragBoxRef.current, mouseW, mouseH);
 
       // Render sidebar minimap
-      const minimapCanvas = document.querySelector('aside canvas') as HTMLCanvasElement | null;
       if (minimapCanvas) {
         renderer.renderMinimap(minimapCanvas, canvas.width, canvas.height);
       }
@@ -121,7 +141,7 @@ export default function App() {
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isPaused]);
+  }, []);
 
   // Window Resize
   useEffect(() => {
@@ -142,8 +162,10 @@ export default function App() {
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't capture when typing in inputs/modals
-      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
+      // Don't capture when typing in inputs/modals. e.target is null when the focused
+      // element was unmounted mid-keystroke (closing a modal with autoFocus).
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
       keysDownRef.current[e.code] = true;
 
@@ -157,18 +179,10 @@ export default function App() {
         return;
       }
 
-      // Tab navigation
-      if (e.code === 'KeyQ') {
-        setActiveCategory('structures');
-        sound.playClick();
-      } else if (e.code === 'KeyW') {
-        setActiveCategory('defenses');
-        sound.playClick();
-      } else if (e.code === 'KeyE') {
-        setActiveCategory('infantry');
-        sound.playClick();
-      } else if (e.code === 'KeyR') {
-        setActiveCategory('vehicles');
+      // Sidebar tab cycle. Was Q/W/E/R, but W also pans the camera north — one key, two meanings.
+      if (!e.repeat && (e.code === 'BracketLeft' || e.code === 'BracketRight')) {
+        const step = e.code === 'BracketRight' ? 1 : -1;
+        setActiveCategory(c => CATEGORIES[(CATEGORIES.indexOf(c) + step + CATEGORIES.length) % CATEGORIES.length]);
         sound.playClick();
       }
 
@@ -540,15 +554,16 @@ export default function App() {
     sound.speakEVA('Nueva batalla inicializando...', true);
   }, []);
 
-  const handleResumeSavedGame = useCallback(() => {
+  // Single loader: ProfileModal used to also call loadSaveState itself, so every
+  // resume paid twice (pathfinder rebuild + grid + AI commander + EVA line).
+  const handleResumeSavedGame = useCallback((): boolean => {
     const saved = storage.getSavedGame();
-    if (!saved) return;
-    const success = engineRef.current.loadSaveState(saved);
-    if (success) {
-      setIsMenuOpen(false);
-      setIsPaused(false);
-      setTick(t => t + 1);
-    }
+    if (!saved) return false;
+    if (!engineRef.current.loadSaveState(saved)) return false;
+    setIsMenuOpen(false);
+    setIsPaused(false);
+    setTick(t => t + 1);
+    return true;
   }, []);
 
   const activeProfile = storage.getActiveProfile();

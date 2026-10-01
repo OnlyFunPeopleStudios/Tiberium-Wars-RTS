@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Pause, Play, Share2, HelpCircle, RotateCcw, Save, User, Check, Sun, CloudFog, CloudRain, Zap, Edit3, X } from 'lucide-react';
 import { sound } from '../audio/soundEngine';
 import { WeatherControllerState } from '../game/types';
@@ -60,10 +60,15 @@ export const TopBar: React.FC<TopBarProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Clear the previous timer, else a quick second save clears the badge early.
+  const savedTimerRef = useRef<number | null>(null);
+  useEffect(() => () => { if (savedTimerRef.current !== null) window.clearTimeout(savedTimerRef.current); }, []);
+
   const handleSaveClick = () => {
     onQuickSave();
     setJustSaved(true);
-    setTimeout(() => setJustSaved(false), 2200);
+    if (savedTimerRef.current !== null) window.clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = window.setTimeout(() => setJustSaved(false), 2200);
   };
 
   return (

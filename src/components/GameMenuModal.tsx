@@ -4,6 +4,11 @@ import { MAP_PRESETS } from '../game/gameData';
 import { Play, Shield, Flame, MapPin, Info, User, RotateCcw, AlertTriangle, Download, Edit3, Check, X } from 'lucide-react';
 import { sound } from '../audio/soundEngine';
 import { storage } from '../game/storage';
+// Imported rather than referenced by string so Vite rewrites them against `base: './'`.
+// Literal "/assets/..." paths resolve to the domain root and 404 on a subpath deploy.
+import bannerImg from '../assets/images/tiberium_warzone_banner_1790201925900.jpg';
+import gdiEmblemImg from '../assets/images/gdi_faction_emblem_1790201936199.jpg';
+import nodEmblemImg from '../assets/images/nod_faction_emblem_1790201945367.jpg';
 
 interface GameMenuModalProps {
   isOpen: boolean;
@@ -58,7 +63,7 @@ export const GameMenuModal: React.FC<GameMenuModalProps> = ({
         {/* Banner Hero */}
         <div className="relative h-44 sm:h-52 bg-neutral-950 overflow-hidden border-b border-neutral-800">
           <img
-            src="/assets/images/tiberium_warzone_banner_1790201925900.jpg"
+            src={bannerImg}
             alt="Tiberium Warzone"
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover object-center opacity-70"
@@ -206,7 +211,7 @@ export const GameMenuModal: React.FC<GameMenuModalProps> = ({
                 }`}
               >
                 <img
-                  src="/assets/images/gdi_faction_emblem_1790201936199.jpg"
+                  src={gdiEmblemImg}
                   alt="GDI Crest"
                   referrerPolicy="no-referrer"
                   className="w-14 h-14 rounded-lg object-cover border border-amber-500/40"
@@ -233,7 +238,7 @@ export const GameMenuModal: React.FC<GameMenuModalProps> = ({
                 }`}
               >
                 <img
-                  src="/assets/images/nod_faction_emblem_1790201945367.jpg"
+                  src={nodEmblemImg}
                   alt="Nod Crest"
                   referrerPolicy="no-referrer"
                   className="w-14 h-14 rounded-lg object-cover border border-red-500/40"

@@ -299,55 +299,126 @@ export default function App() {
     // RIGHT CLICK: Move or Attack Command
     else if (e.button === 2) {
       e.preventDefault();
-
-      // Cancel placement, relocation, or superweapon on right click
-      if (engine.placementStructure) {
-        engine.placementStructure = null;
-        engine.notifyUI();
-        sound.playClick();
-        return;
-      }
-      if (engine.relocatingStructure) {
-        engine.cancelStructureRelocation();
-        sound.playClick();
-        return;
-      }
-      if (engine.superweaponTargeting) {
-        engine.superweaponTargeting = false;
-        engine.notifyUI();
-        sound.playClick();
-        return;
-      }
-
-      // Check if clicking on enemy unit or structure
-      let targetUnitId: string | undefined;
-      let targetStructureId: string | undefined;
-
-      // Enemy unit check (must be visible in player's line of sight)
-      for (const u of engine.units) {
-        if (!u.isPlayer && engine.isPositionVisible(u.x, u.y) && Math.hypot(u.x - worldX, u.y - worldY) < u.size) {
-          targetUnitId = u.id;
-          break;
-        }
-      }
-
-      // Structure check (enemy attack target OR friendly structure such as refinery for harvesters)
-      if (!targetUnitId) {
-        for (const s of engine.structures) {
-          if (s.hp > 0 && Math.abs(s.x - worldX) < s.width / 2 && Math.abs(s.y - worldY) < s.height / 2) {
-            if (s.isPlayer || engine.isPositionVisible(s.x, s.y)) {
-              targetStructureId = s.id;
-              break;
-            }
-          }
-        }
-      }
-
-      engine.issueCommandToSelected(worldX, worldY, targetUnitId, targetStructureId);
+      issueCommandAt(e.clientX, e.clientY);
     }
   };
 
+  // Move / attack / cancel — shared by right click (PC) and long press (mobile).
+  const issueCommandAt = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const engine = engineRef.current;
+    const worldX = clientX - rect.left + engine.cameraX;
+    const worldY = clientY - rect.top + engine.cameraY;
+
+    // Cancel placement, relocation, or superweapon on right click
+    if (engine.placementStructure) {
+      engine.placementStructure = null;
+      engine.notifyUI();
+      sound.playClick();
+      return;
+    }
+    if (engine.relocatingStructure) {
+      engine.cancelStructureRelocation();
+      sound.playClick();
+      return;
+    }
+    if (engine.superweaponTargeting) {
+      engine.superweaponTargeting = false;
+      engine.notifyUI();
+      sound.playClick();
+      return;
+    }
+
+    // Check if clicking on enemy unit or structure
+    let targetUnitId: string | undefined;
+    let targetStructureId: string | undefined;
+
+    // Enemy unit check (must be visible in player's line of sight)
+    for (const u of engine.units) {
+      if (!u.isPlayer && engine.isPositionVisible(u.x, u.y) && Math.hypot(u.x - worldX, u.y - worldY) < u.size) {
+        targetUnitId = u.id;
+        break;
+      }
+    }
+
+    // Structure check (enemy attack target OR friendly structure such as refinery for harvesters)
+    if (!targetUnitId) {
+      for (const s of engine.structures) {
+        if (s.hp > 0 && Math.abs(s.x - worldX) < s.width / 2 && Math.abs(s.y - worldY) < s.height / 2) {
+          if (s.isPlayer || engine.isPositionVisible(s.x, s.y)) {
+            targetStructureId = s.id;
+            break;
+          }
+        }
+      }
+    }
+
+    engine.issueCommandToSelected(worldX, worldY, targetUnitId, targetStructureId);
+  };
+
+  // --- Touch: tap/drag already work via synthesized mouse events (see touch-none below).
+  // Long press stands in for right click, since touch has no button 2.
+  const LONG_PRESS_MS = 450;
+  const touchTimerRef = useRef<number | null>(null);
+  const suppressClickRef = useRef(false);
+  const panRef = useRef<{ x: number; y: number } | null>(null);
+
+  const clearTouchTimer = () => {
+    if (touchTimerRef.current !== null) {
+      window.clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length !== 1) return;
+    suppressClickRef.current = false;
+    const { clientX, clientY } = e.touches[0];
+    clearTouchTimer();
+    touchTimerRef.current = window.setTimeout(() => {
+      touchTimerRef.current = null;
+      suppressClickRef.current = true;
+      issueCommandAt(clientX, clientY);
+    }, LONG_PRESS_MS);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    // Any movement cancels the long press (that gesture is a drag-select or pan).
+    clearTouchTimer();
+
+    // Two fingers = pan camera (the only camera control a phone has besides the minimap).
+    if (e.touches.length !== 2) {
+      panRef.current = null;
+      return;
+    }
+    const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+    const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    const prev = panRef.current;
+    if (prev) {
+      const canvas = canvasRef.current;
+      const engine = engineRef.current;
+      if (canvas) {
+        engine.cameraX = Math.max(0, Math.min(engine.currentMap.width - canvas.width, engine.cameraX - (cx - prev.x)));
+        engine.cameraY = Math.max(0, Math.min(engine.currentMap.height - canvas.height, engine.cameraY - (cy - prev.y)));
+      }
+    }
+    panRef.current = { x: cx, y: cy };
+    suppressClickRef.current = true;
+  };
+
+  const handleTouchEnd = () => {
+    clearTouchTimer();
+    panRef.current = null;
+  };
+
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // A long press already issued the command; eat the synthesized click so it doesn't deselect.
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
     if (e.button === 0 && isDraggingBoxRef.current) {
       isDraggingBoxRef.current = false;
       const engine = engineRef.current;
@@ -504,7 +575,10 @@ export default function App() {
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
             onContextMenu={handleContextMenu}
-            className="w-full h-full cursor-crosshair block"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="w-full h-full cursor-crosshair block touch-none"
           />
 
           {/* CRT Retro Scanline Overlay */}

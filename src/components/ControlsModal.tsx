@@ -34,7 +34,7 @@ export const ControlsModal: React.FC<ControlsModalProps> = ({ isOpen, onClose })
           <div>
             <h3 className="font-semibold text-neutral-100 mb-2 flex items-center gap-1.5">
               <MousePointer className="w-3.5 h-3.5 text-emerald-400" />
-              Acciones con el Ratón
+              Acciones con el Ratón o el Dedo
             </h3>
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2 bg-neutral-950 rounded border border-neutral-800">
@@ -52,6 +52,14 @@ export const ControlsModal: React.FC<ControlsModalProps> = ({ isOpen, onClose })
               <div className="p-2 bg-neutral-950 rounded border border-neutral-800">
                 <span className="font-bold text-neutral-200 block mb-0.5">Click en Minimapa</span>
                 <span className="text-neutral-400">Desplazar cámara inmediatamente a ese sector.</span>
+              </div>
+              <div className="p-2 bg-neutral-950 rounded border border-neutral-800">
+                <span className="font-bold text-neutral-200 block mb-0.5">Toque Largo</span>
+                <span className="text-neutral-400">En celular: equivale al click derecho (mover o atacar).</span>
+              </div>
+              <div className="p-2 bg-neutral-950 rounded border border-neutral-800">
+                <span className="font-bold text-neutral-200 block mb-0.5">Dos Dedos Arrastrando</span>
+                <span className="text-neutral-400">En celular: mueve la cámara por el mapa.</span>
               </div>
               <div className="p-2 bg-neutral-950 rounded border border-neutral-800">
                 <span className="font-bold text-neutral-200 block mb-0.5">Cola de Producción</span>

@@ -435,6 +435,15 @@ export default function App() {
     setTick(t => t + 1);
   }, []);
 
+// Reinicia completamente el juego (se usa desde el modal de Victoria/Derrota)
+  const restartGame = useCallback((faction: Faction, difficulty: AIDifficulty, map: MapType) => {
+    engineRef.current.startNewGame(faction, difficulty, map);
+    setIsPaused(false);
+    setIsMenuOpen(true);
+    setTick(t => t + 1);
+    sound.speakEVA('Nueva batalla inicializando...', true);
+  }, []);
+
   const handleResumeSavedGame = useCallback(() => {
     const saved = storage.getSavedGame();
     if (!saved) return;
@@ -777,7 +786,7 @@ export default function App() {
 
       <VictoryDefeatModal
         engine={engineRef.current}
-        onRestart={() => setIsMenuOpen(true)}
+        onRestart={() => restartGame(engineRef.current.playerFaction, engineRef.current.difficulty, engineRef.current.mapType)}
         onOpenEmbed={() => setIsEmbedOpen(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
       />

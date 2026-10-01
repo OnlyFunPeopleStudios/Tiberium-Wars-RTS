@@ -58,7 +58,7 @@ export const GameMenuModal: React.FC<GameMenuModalProps> = ({
         {/* Banner Hero */}
         <div className="relative h-44 sm:h-52 bg-neutral-950 overflow-hidden border-b border-neutral-800">
           <img
-            src="/src/assets/images/tiberium_warzone_banner_1790201925900.jpg"
+            src="/assets/images/tiberium_warzone_banner_1790201925900.jpg"
             alt="Tiberium Warzone"
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover object-center opacity-70"
@@ -206,7 +206,7 @@ export const GameMenuModal: React.FC<GameMenuModalProps> = ({
                 }`}
               >
                 <img
-                  src="/src/assets/images/gdi_faction_emblem_1790201936199.jpg"
+                  src="/assets/images/gdi_faction_emblem_1790201936199.jpg"
                   alt="GDI Crest"
                   referrerPolicy="no-referrer"
                   className="w-14 h-14 rounded-lg object-cover border border-amber-500/40"
@@ -233,7 +233,7 @@ export const GameMenuModal: React.FC<GameMenuModalProps> = ({
                 }`}
               >
                 <img
-                  src="/src/assets/images/nod_faction_emblem_1790201945367.jpg"
+                  src="/assets/images/nod_faction_emblem_1790201945367.jpg"
                   alt="Nod Crest"
                   referrerPolicy="no-referrer"
                   className="w-14 h-14 rounded-lg object-cover border border-red-500/40"
